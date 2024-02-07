@@ -1,0 +1,27 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "name": "passkeyapp",
+    "version": "1.0.0",
+    "description": "a simple passkey authentication app for learning and demo",
+    "main": "index.js",
+    "directories": {
+        "test": "tests"
+    },
+    "author": "Yusif Katulie",
+    "devDependencies": {
+        "laravel-vite-plugin": "^1.0.0",
+        "vite": "^5.0.0"
+    },
+    "dependencies": {
+        "@simplewebauthn/browser": "^9.0.1",
+        "@vitejs/plugin-vue": "^5.0.3",
+        "axios": "^1.6.7",
+        "vue": "^3.4.15"
+    }
+}
