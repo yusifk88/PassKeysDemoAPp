@@ -8,7 +8,9 @@ use Cose\Algorithms;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use Psr\Http\Message\ServerRequestInterface;
+use Throwable;
 use Webauthn\AttestationStatement\AttestationObjectLoader;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AttestationStatement\NoneAttestationStatementSupport;
@@ -24,6 +26,7 @@ use Webauthn\PublicKeyCredentialParameters;
 use Webauthn\PublicKeyCredentialRpEntity;
 use Webauthn\PublicKeyCredentialUserEntity;
 use Webauthn\TokenBinding\IgnoreTokenBindingHandler;
+use Webauthn\Util\Base64;
 
 class RegisterController extends Controller
 {
@@ -37,7 +40,8 @@ class RegisterController extends Controller
     {
 
         $request->validate([
-            "userName" => "required"
+            "userName" => "required",
+            "name" => "required"
         ]);
 
         // Relying Party Entity i.e. the application
@@ -50,8 +54,8 @@ class RegisterController extends Controller
         $userName = $request->userName;
         // User Entity
         $userEntity = PublicKeyCredentialUserEntity::create(
-            $userName,
-            $userName,
+            $request->name,
+            Base64UrlSafe::encodeUnpadded($userName),
             $userName,
             null,
         );
@@ -112,7 +116,38 @@ class RegisterController extends Controller
         $criteria = AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_PREFERRED;
 
 
-       // $serializedOptions['authenticatorSelection']['residentKey'] = $criteria;
+        $selectionArr = (array)$serializedOptions['authenticatorSelection'];
+
+        $extensions = (array)$serializedOptions['extensions'];
+        $user = (array)$serializedOptions['user'];
+        $rp = (array)$serializedOptions['rp'];
+        $credProps = (array)$extensions["credProps"];
+
+        $publicKeyParams = $serializedOptions['pubKeyCredParams'];
+
+        $paramList = [];
+
+        foreach ($publicKeyParams as $param) {
+            $paramList[] = [
+                "type" => $param->type,
+                "alg" => $param->alg
+
+            ];
+
+        }
+
+
+        $serializedOptions['pubKeyCredParams'] = $paramList;
+
+        $extensions["credProps"] = $credProps;
+
+        $serializedOptions['rp'] = $rp;
+        $serializedOptions['user'] = $user;
+        $serializedOptions['extensions'] = $extensions;
+
+        $serializedOptions['authenticatorSelection'] = $selectionArr;
+
+        $serializedOptions['authenticatorSelection']['residentKey'] = $criteria;
 
         // It is important to store the user entity and the options object in the session
         // for the next step. The data will be needed to check the response from the device.
@@ -122,8 +157,18 @@ class RegisterController extends Controller
         );
 
         return $serializedOptions;
+
     }
 
+
+    /**
+     * @param Request $request
+     * @param ServerRequestInterface $serverRequest
+     * @return true[]
+     * @throws InvalidDataException
+     * @throws ValidationException
+     * @throws Throwable
+     */
 
     public function verify(Request $request, ServerRequestInterface $serverRequest): array
     {
@@ -162,14 +207,16 @@ class RegisterController extends Controller
         // the exception bubble up so we can see what is
         // going on.
 
+        $entity = session(self::CREDENTIAL_CREATION_OPTIONS_SESSION_KEY);
+
+
 
         $publicKeyCredentialSource = $responseValidator->check(
             $authenticatorAttestationResponse,
-            PublicKeyCredentialCreationOptions::createFromArray(
-                session(self::CREDENTIAL_CREATION_OPTIONS_SESSION_KEY)
-            ),
+            PublicKeyCredentialCreationOptions::createFromArray($entity),
             $serverRequest
         );
+
 
         // If we've gotten this far, the response is valid!
 
@@ -178,7 +225,7 @@ class RegisterController extends Controller
 
         // Save the user and the public key credential source to the database
         $user = User::create([
-            'username' => $publicKeyCredentialSource->getUserHandle(),
+            'email' => $publicKeyCredentialSource->getUserHandle(),
         ]);
 
         $pkSourceRepo->saveCredentialSource($publicKeyCredentialSource);

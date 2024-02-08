@@ -7,6 +7,7 @@ use Corbado\Config;
 use Corbado\Configuration;
 use Corbado\SDK;
 use Illuminate\Support\Facades\Route;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,3 +35,4 @@ Route::post("passkey-auth/register/options", [RegisterController::class, "genera
 Route::post("passkey-auth/register/verify", [RegisterController::class, "verify"]);
 
 require __DIR__ . '/auth.php';
+
