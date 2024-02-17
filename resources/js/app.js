@@ -11,20 +11,17 @@ createApp({
     data() {
         return {
             counter: 1,
-            userName: "",
+            email: "",
             register: false,
             name: ""
         }
     },
     methods: {
 
-        authenticate() {
-            alert("auth clicked " + this.userName)
-        },
         getOptions() {
 
             axios.post("/passkey-auth/options", {
-                userName: this.userName
+                email: this.email
             })
                 .then(res => startRegistration(res.data))
                 .then(attRes => {
@@ -53,7 +50,7 @@ createApp({
 
             const data = {
                 name: this.name,
-                userName: this.userName
+                email: this.email
 
             };
 

@@ -23,7 +23,7 @@
                 </div>
                 <div class="card-body">
                     <label>Username or Email</label>
-                    <input v-model="userName" type="email" class="form-control">
+                    <input v-model="email" type="email" class="form-control">
                     <button @click="getOptions" class="btn btn-primary btn-block btn-lg mt-2 w-100">Authenticate
                     </button>
                 </div>
@@ -39,7 +39,7 @@
                     <input v-model="name" type="text" class="form-control">
 
                     <label>Username or Email</label>
-                    <input v-model="userName" type="text" class="form-control">
+                    <input v-model="email" type="text" class="form-control">
 
                     <button @click="registerUser" class="btn btn-primary btn-block btn-lg mt-2 w-100">Register
                     </button>
